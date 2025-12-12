@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ SceneVibe ✨</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Chewy&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,0,255,0.15) 10px, rgba(255,0,255,0.15) 20px),
+                repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(0,255,255,0.15) 10px, rgba(0,255,255,0.15) 20px);
+            font-family: 'Chewy', cursive;
+            color: #fff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .sparkle {
+            position: fixed;
+            pointer-events: none;
+            animation: sparkleFloat 3s infinite;
+            font-size: 24px;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        @keyframes sparkleFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+            50% { transform: translateY(-30px) rotate(180deg); opacity: 1; }
+        }
+
+        header {
+            background: linear-gradient(135deg, #ff00ff, #00ffff, #ff00ff);
+            padding: 25px;
+            text-align: center;
+            border-bottom: 5px dashed #fff;
+            box-shadow: 0 0 30px rgba(255,0,255,0.8), 0 0 50px rgba(0,255,255,0.6);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 64px;
+            text-shadow: 
+                4px 4px 0 #000,
+                -4px -4px 0 #000,
+                4px -4px 0 #000,
+                -4px 4px 0 #000,
+                0 0 20px #ff00ff,
+                0 0 40px #00ffff;
+            animation: rainbow 3s infinite;
+            letter-spacing: 5px;
+        }
+
+        @keyframes rainbow {
+            0% { color: #ff00ff; }
+            25% { color: #00ffff; }
+            50% { color: #ffff00; }
+            75% { color: #00ff00; }
+            100% { color: #ff00ff; }
+        }
+
+        .subtitle {
+            font-size: 22px;
+            margin-top: 10px;
+            color: #fff;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid #ff00ff;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 40px rgba(255,0,255,0.7), inset 0 0 30px rgba(255,0,255,0.1);
+            position: sticky;
+            top: 170px;
+            height: fit-content;
+            max-height: calc(100vh - 190px);
+            overflow-y: auto;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #000;
+            border: 2px solid #ff00ff;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #ff00ff, #00ffff);
+            border-radius: 6px;
+        }
+
+        .section-title {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 26px;
+            color: #00ffff;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(0,255,255,0.8);
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 15px rgba(0,255,255,0.8); }
+            50% { text-shadow: 0 0 25px rgba(0,255,255,1), 0 0 35px rgba(0,255,255,0.6); }
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #ff00ff, #ff00aa);
+            color: #fff;
+            border: 3px solid #fff;
+            padding: 14px 20px;
+            border-radius: 15px;
+            font-family: 'Permanent Marker', cursive;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 5px 25px rgba(255,0,255,0.6);
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .btn-create:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 8px 35px rgba(255,0,255,0.9);
+        }
+
+        .room-item, .user-item {
+            background: rgba(255,0,255,0.2);
+            border: 3px solid #ff00ff;
+            border-radius: 15px;
+            padding: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .room-item:hover, .user-item:hover {
+            background: rgba(255,0,255,0.4);
+            transform: translateX(10px) rotate(2deg);
+            box-shadow: 0 0 20px rgba(255,0,255,0.8);
+        }
+
+        .room-item.active {
+            background: rgba(0,255,255,0.3);
+            border-color: #00ffff;
+            box-shadow: 0 0 30px rgba(0,255,255,0.8);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        .room-name {
+            font-weight: bold;
+            color: #00ffff;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .room-topic {
+            font-size: 13px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        .room-type {
+            display: inline-block;
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            background: rgba(255,255,0,0.3);
+            color: #ffff00;
+            border: 2px solid #ffff00;
+            margin-top: 5px;
+        }
+
+        .user-name {
+            font-weight: bold;
+            color: #ffff00;
+            font-size: 16px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .user-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #0f0;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: blink 2s infinite;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .top-bar {
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid #ff00ff;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 0 40px rgba(255,0,255,0.7);
+        }
+
+        .room-title {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 42px;
+            color: #00ffff;
+            text-shadow: 3px 3px 6px #000, 0 0 20px #00ffff;
+            margin-bottom: 8px;
+        }
+
+        .room-description {
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        .online-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0,255,0,0.2);
+            border: 3px solid #0f0;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            margin-top: 12px;
+        }
+
+        .blink-dot {
+            width: 10px;
+            height: 10px;
+            background: #0f0;
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px #0f0; }
+            50% { opacity: 0.3; }
+        }
+
+        .chat-container {
+            background: rgba(0, 0, 0, 0.9);
+            border: 4px solid #ff00ff;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(255,0,255,0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 550px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 14px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #000;
+            border: 2px solid #ff00ff;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #ff00ff, #00ffff);
+            border-radius: 7px;
+        }
+
+        .message {
+            background: rgba(255,0,255,0.2);
+            border-left: 5px solid #00ffff;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .message-username {
+            font-weight: bold;
+            color: #00ffff;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .message-time {
+            font-size: 12px;
+            color: #999;
+            margin-left: 12px;
+        }
+
+        .message-text {
+            margin-top: 8px;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .chat-input-area {
+            padding: 25px;
+            border-top: 3px solid rgba(255,0,255,0.5);
+            background: rgba(10,0,20,0.7);
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0,0,0,0.7);
+            border: 3px solid #ff00ff;
+            border-radius: 15px;
+            color: #fff;
+            font-family: 'Chewy', cursive;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0,255,255,0.5);
+        }
+
+        textarea {
+            resize: none;
+            height: 90px;
+            margin: 12px 0;
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, #00ffff, #0080ff);
+            color: #fff;
+            border: 3px solid #fff;
+            padding: 14px 35px;
+            border-radius: 15px;
+            font-family: 'Permanent Marker', cursive;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 25px rgba(0,255,255,0.6);
+            transition: all 0.3s;
+            width: 100%;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .btn-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 35px rgba(0,255,255,0.9);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(10,0,20,0.98), rgba(30,0,50,0.98));
+            border: 5px solid #ff00ff;
+            border-radius: 25px;
+            padding: 35px;
+            max-width: 550px;
+            width: 90%;
+            box-shadow: 0 0 60px rgba(255,0,255,0.8);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: scale(0.8) rotate(-5deg);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 32px;
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 0 20px rgba(0,255,255,0.8);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #666, #333);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            padding: 50px 20px;
+            font-size: 16px;
+        }
+
+        .sticker {
+            display: inline-block;
+            font-size: 32px;
+            margin: 0 8px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: relative;
+                top: 0;
+                max-height: none;
+            }
+
+            h1 {
+                font-size: 48px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SceneVibe</h1>
+        <div class="subtitle">
+            <span class="sticker">★</span>
+            ♥ rAwR means I love u in dinosaur ♥
+            <span class="sticker">★</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="section-title">🌟 PUBLIC ROOMS</div>
+            <button class="btn-create" onclick="openCreateRoomModal('public')">✨ CREATE ROOM</button>
+            <div id="publicRooms"></div>
+
+            <div class="section-title" style="margin-top: 25px;">🔐 PRIVATE ROOMS</div>
+            <button class="btn-create" onclick="openCreateRoomModal('private')">🔒 CREATE PRIVATE</button>
+            <button class="btn-create" onclick="openJoinModal()">🔑 JOIN WITH CODE</button>
+            <div id="privateRooms"></div>
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <div class="room-title" id="currentRoomName">Welcome! ✨</div>
+                <div class="room-description" id="currentRoomTopic">Create or join a room to start chatting!</div>
+                <div class="online-badge">
+                    <div class="blink-dot"></div>
+                    <span><span id="onlineCount">0</span> ppl online now</span>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="empty-state">
+                        <div style="font-size: 64px; margin-bottom: 15px;">💬</div>
+                        <div><strong>No room selected!</strong></div>
+                        <div>Pick a room or create one to start vibing ✨</div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="usernameInput" placeholder="xX_YourName_Xx" maxlength="25">
+                    <textarea id="messageInput" placeholder="Type ur message... RAWR! 🦖💕"></textarea>
+                    <button class="btn-send" onclick="sendMessage()">SEND ★</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="section-title">👥 ONLINE USERS</div>
+            <div id="userList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="createRoomModal">
+        <div class="modal-content">
+            <div class="modal-title" id="createModalTitle">CREATE ROOM ★</div>
+            <input type="text" id="roomName" placeholder="Room name (e.g., emo-corner, anime-squad)">
+            <textarea id="roomTopic" placeholder="What's this room about? ✨" style="height: 90px; margin: 15px 0;"></textarea>
+            <div id="privateSection" style="display: none;">
+                <input type="text" id="roomCode" placeholder="Secret code (4-8 chars)">
+                <div style="font-size: 13px; color: rgba(255,255,0,0.8); margin-top: 8px; text-align: center;">
+                    🔒 Only people with this code can join!
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-create" onclick="createRoom()">CREATE ★</button>
+                <button class="btn-create btn-cancel" onclick="closeModal('createRoomModal')">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="joinModal">
+        <div class="modal-content">
+            <div class="modal-title">JOIN PRIVATE ROOM 🔑</div>
+            <input type="text" id="joinCode" placeholder="Enter room code..." style="margin: 20px 0;">
+            <div class="modal-buttons">
+                <button class="btn-create" onclick="joinPrivateRoom()">JOIN ★</button>
+                <button class="btn-create btn-cancel" onclick="closeModal('joinModal')">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, push, set, onValue, onChildAdded, query, limitToLast, orderByChild } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBy7Ssk_EsoluaWFULu1H2GZB8-WtqcDwM",
+            authDomain: "lagtown.firebaseapp.com",
+            databaseURL: "https://lagtown-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "lagtown",
+            storageBucket: "lagtown.firebasestorage.app",
+            messagingSenderId: "330251712569",
+            appId: "1:330251712569:web:eeb6131cd481b11bc575e8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        window.db = database;
+        window.dbRef = ref;
+        window.dbPush = push;
+        window.dbSet = set;
+        window.dbOnValue = onValue;
+        window.dbOnChildAdded = onChildAdded;
+        window.dbQuery = query;
+        window.dbLimitToLast = limitToLast;
+
+        let currentRoom = null;
+        let roomType = 'public';
+        let messageListeners = {};
+
+        async function init() {
+            createSparkles();
+            await loadRooms();
+            await updateUserPresence();
+            
+            const msgInput = document.getElementById('messageInput');
+            if (msgInput) {
+                msgInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        window.sendMessage();
+                    }
+                });
+            }
+
+            setInterval(updateUserPresence, 15000);
+            setInterval(loadOnlineUsers, 10000);
+            
+            const savedUsername = localStorage.getItem('scenevibe_username');
+            if (savedUsername) {
+                document.getElementById('usernameInput').value = savedUsername;
+            }
+
+            await createDefaultRooms();
+        }
+
+        function createSparkles() {
+            const sparkles = ['✨', '⭐', '💫', '🌟', '✦', '★', '💖', '🦖'];
+            for (let i = 0; i < 35; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.top = Math.random() * 100 + '%';
+                sparkle.style.animationDelay = Math.random() * 3 + 's';
+                document.body.appendChild(sparkle);
+            }
+        }
+
+        async function createDefaultRooms() {
+            const roomsRef = window.dbRef(window.db, 'rooms');
+            window.dbOnValue(roomsRef, (snapshot) => {
+                if (!snapshot.exists() || snapshot.size === 0) {
+                    const defaultRooms = [
+                        {
+                            name: 'General Vibes',
+                            topic: 'talk about anything!! RAWR!! 🦖',
+                            type: 'public',
+                            created: Date.now()
+                        },
+                        {
+                            name: 'Music Corner',
+                            topic: 'share ur fav bands and songs!! 🎵',
+                            type: 'public',
+                            created: Date.now()
+                        },
+                        {
+                            name: 'Emo Kids Unite',
+                            topic: 'for all the emo kids out there ♥',
+                            type: 'public',
+                            created: Date.now()
+                        }
+                    ];
+                    
+                    defaultRooms.forEach(room => {
+                        const newRoomRef = window.dbPush(roomsRef);
+                        window.dbSet(newRoomRef, room);
+                    });
+                }
+            }, { onlyOnce: true });
+        }
+
+        async function loadRooms() {
+            const roomsRef = window.dbRef(window.db, 'rooms');
+            window.dbOnValue(roomsRef, (snapshot) => {
+                const rooms = [];
+                snapshot.forEach((childSnapshot) => {
+                    rooms.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                
+                const publicRooms = rooms.filter(r => r.type === 'public');
+                const privateRooms = rooms.filter(r => r.type === 'private');
+                
+                renderPublicRooms(publicRooms);
+                renderPrivateRooms(privateRooms);
+            });
+        }
+
+        function renderPublicRooms(rooms) {
+            const container = document.getElementById('publicRooms');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            rooms.forEach(room => {
+                const div = document.createElement('div');
+                div.className = 'room-item' + (currentRoom === room.id ? ' active' : '');
+                div.onclick = () => window.switchRoom(room.id, room.name, room.topic);
+                div.innerHTML = `
+                    <div class="room-name">#${escapeHtml(room.name)}</div>
+                    <div class="room-topic">${escapeHtml(room.topic)}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderPrivateRooms(rooms) {
+            const container = document.getElementById('privateRooms');
+            if (!container) return;
+            
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px; font-size: 13px;">No private rooms yet</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            rooms.forEach(room => {
+                const div = document.createElement('div');
+                div.className = 'room-item' + (currentRoom === room.id ? ' active' : '');
+                div.onclick = () => window.switchRoom(room.id, room.name, room.topic);
+                div.innerHTML = `
+                    <div class="room-name">🔒 ${escapeHtml(room.name)}</div>
+                    <div class="room-topic">${escapeHtml(room.topic)}</div>
+                    <div class="room-type">Code: ${escapeHtml(room.code)}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function loadOnlineUsers() {
+            const usersRef = window.dbRef(window.db, 'users');
+            window.dbOnValue(usersRef, (snapshot) => {
+                const users = [];
+                const now = Date.now();
+                
+                snapshot.forEach((childSnapshot) => {
+                    const user = childSnapshot.val();
+                    if (now - user.lastSeen < 60000) {
+                        users.push(user);
+                    }
+                });
+                
+                renderUsers(users);
+                document.getElementById('onlineCount').textContent = users.length;
+            });
+        }
+
+        function renderUsers(users) {
+            const container = document.getElementById('userList');
+            if (!container) return;
+            
+            if (users.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding: 20px; font-size: 13px;">No users online</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user-item';
+                div.innerHTML = `
+                    <span class="user-status"></span>
+                    <span class="user-name">${escapeHtml(user.username)}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function updateUserPresence() {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) return;
+            
+            const userKey = username.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            const userRef = window.dbRef(window.db, `users/${userKey}`);
+            await window.dbSet(userRef, {
+                username: username,
+                lastSeen: Date.now()
+            });
+        }
+
+        window.switchRoom = function(roomId, roomName, roomTopic) {
+            currentRoom = roomId;
+            document.getElementById('currentRoomName').textContent = '#' + roomName;
+            document.getElementById('currentRoomTopic').textContent = roomTopic;
+            
+            if (messageListeners[roomId]) {
+                return;
+            }
+            
+            loadMessages(roomId);
+            loadRooms();
+        }
+
+        function loadMessages(roomId) {
+            const messagesRef = window.dbRef(window.db, `messages/${roomId}`);
+            const messagesQuery = window.dbQuery(messagesRef, window.dbLimitToLast(100));
+            
+            window.dbOnChildAdded(messagesQuery, (snapshot) => {
+                const message = snapshot.val();
+                if (currentRoom === roomId) {
+                    appendMessage(message);
+                }
+            });
+            
+            messageListeners[roomId] = true;
+        }
+
+        function appendMessage(msg) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            
+            const emptyState = container.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const div = document.createElement('div');
+            div.className = 'message';
+            div.innerHTML = `
+                <div>
+                    <span class="message-username">${escapeHtml(msg.username)}</span>
+                    <span class="message-time">${msg.time}</span>
+                </div>
+                <div class="message-text">${escapeHtml(msg.text)}</div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.sendMessage = async function() {
+            if (!currentRoom) {
+                alert('⚠️ Pick a room first!! ✨');
+                return;
+            }
+            
+            const usernameInput = document.getElementById('usernameInput');
+            const messageInput = document.getElementById('messageInput');
+            
+            if (!usernameInput || !messageInput) return;
+            
+            let username = usernameInput.value.trim();
+            if (!username) {
+                username = 'Anonymous_' + Math.floor(Math.random() * 9999);
+                usernameInput.value = username;
+            }
+            
+            const text = messageInput.value.trim();
+            
+            if (!text) {
+                alert('⚠️ Type something first!! 💕');
+                return;
+            }
+            
+            try {
+                localStorage.setItem('scenevibe_username', username);
+                
+                const messagesRef = window.dbRef(window.db, `messages/${currentRoom}`);
+                const newMessageRef = window.dbPush(messagesRef);
+                
+                await window.dbSet(newMessageRef, {
+                    username: username,
+                    text: text,
+                    time: getTime(),
+                    timestamp: Date.now()
+                });
+                
+                messageInput.value = '';
+                await updateUserPresence();
+                
+            } catch (e) {
+                console.error('Error sending message:', e);
+                alert('❌ Error sending message! Try again.');
+            }
+        }
+
+        window.createRoom = async function() {
+            const nameInput = document.getElementById('roomName');
+            const topicInput = document.getElementById('roomTopic');
+            const codeInput = document.getElementById('roomCode');
+            
+            if (!nameInput || !topicInput) return;
+            
+            const name = nameInput.value.trim();
+            const topic = topicInput.value.trim();
+            const code = codeInput ? codeInput.value.trim() : '';
+            
+            if (!name) {
+                alert('⚠️ Enter a room name!! ✨');
+                return;
+            }
+            
+            if (roomType === 'private' && !code) {
+                alert('⚠️ Enter a secret code!! 🔒');
+                return;
+            }
+            
+            if (roomType === 'private' && code.length < 4) {
+                alert('⚠️ Code must be at least 4 characters!! 🔑');
+                return;
+            }
+            
+            try {
+                const roomsRef = window.dbRef(window.db, 'rooms');
+                const newRoomRef = window.dbPush(roomsRef);
+                
+                const room = {
+                    name: name,
+                    topic: topic || 'No description yet!',
+                    type: roomType,
+                    code: roomType === 'private' ? code : null,
+                    created: Date.now()
+                };
+                
+                await window.dbSet(newRoomRef, room);
+                
+                nameInput.value = '';
+                topicInput.value = '';
+                if (codeInput) codeInput.value = '';
+                
+                window.closeModal('createRoomModal');
+                window.switchRoom(newRoomRef.key, room.name, room.topic);
+                
+            } catch (e) {
+                console.error('Error creating room:', e);
+                alert('❌ Error creating room! Try again.');
+            }
+        }
+
+        window.openCreateRoomModal = function(type) {
+            roomType = type;
+            document.getElementById('createModalTitle').textContent = type === 'private' ? '🔒 CREATE PRIVATE ROOM' : '✨ CREATE PUBLIC ROOM';
+            document.getElementById('privateSection').style.display = type === 'private' ? 'block' : 'none';
+            document.getElementById('createRoomModal').classList.add('active');
+        }
+
+        window.openJoinModal = function() {
+            document.getElementById('joinModal').classList.add('active');
+        }
+
+        window.joinPrivateRoom = async function() {
+            const codeInput = document.getElementById('joinCode');
+            if (!codeInput) return;
+            
+            const code = codeInput.value.trim();
+            
+            if (!code) {
+                alert('⚠️ Enter a room code!! 🔑');
+                return;
+            }
+            
+            try {
+                const roomsRef = window.dbRef(window.db, 'rooms');
+                window.dbOnValue(roomsRef, (snapshot) => {
+                    let foundRoom = null;
+                    snapshot.forEach((childSnapshot) => {
+                        const room = childSnapshot.val();
+                        if (room.type === 'private' && room.code === code) {
+                            foundRoom = {
+                                id: childSnapshot.key,
+                                ...room
+                            };
+                        }
+                    });
+                    
+                    if (!foundRoom) {
+                        alert('⚠️ Invalid code!! Try again 💔');
+                        return;
+                    }
+                    
+                    codeInput.value = '';
+                    window.closeModal('joinModal');
+                    window.switchRoom(foundRoom.id, foundRoom.name, foundRoom.topic);
+                }, { onlyOnce: true });
+                
+            } catch (e) {
+                console.error('Error joining room:', e);
+                alert('❌ Error joining room! Try again.');
+            }
+        }
+
+        window.closeModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+            }
+        }
+
+        function getTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit', 
+                hour12: true 
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
