@@ -573,60 +573,33 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, set, onValue, onChildAdded, query, limitToLast, orderByChild } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBy7Ssk_EsoluaWFULu1H2GZB8-WtqcDwM",
-            authDomain: "lagtown.firebaseapp.com",
-            databaseURL: "https://lagtown-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "lagtown",
-            storageBucket: "lagtown.firebasestorage.app",
-            messagingSenderId: "330251712569",
-            appId: "1:330251712569:web:eeb6131cd481b11bc575e8"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        window.db = database;
-        window.dbRef = ref;
-        window.dbPush = push;
-        window.dbSet = set;
-        window.dbOnValue = onValue;
-        window.dbOnChildAdded = onChildAdded;
-        window.dbQuery = query;
-        window.dbLimitToLast = limitToLast;
-
+    <script>
         let currentRoom = null;
+        let currentUsername = '';
         let roomType = 'public';
-        let messageListeners = {};
+        let updateInterval = null;
 
         async function init() {
             createSparkles();
             await loadRooms();
-            await updateUserPresence();
+            await loadOnlineUsers();
             
             const msgInput = document.getElementById('messageInput');
             if (msgInput) {
                 msgInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        window.sendMessage();
+                        sendMessage();
                     }
                 });
             }
 
-            setInterval(updateUserPresence, 15000);
             setInterval(loadOnlineUsers, 10000);
             
             const savedUsername = localStorage.getItem('scenevibe_username');
             if (savedUsername) {
                 document.getElementById('usernameInput').value = savedUsername;
             }
-
-            await createDefaultRooms();
         }
 
         function createSparkles() {
@@ -642,56 +615,77 @@
             }
         }
 
-        async function createDefaultRooms() {
-            const roomsRef = window.dbRef(window.db, 'rooms');
-            window.dbOnValue(roomsRef, (snapshot) => {
-                if (!snapshot.exists() || snapshot.size === 0) {
-                    const defaultRooms = [
-                        {
-                            name: 'General Vibes',
-                            topic: 'talk about anything!! RAWR!! 🦖',
-                            type: 'public',
-                            created: Date.now()
-                        },
-                        {
-                            name: 'Music Corner',
-                            topic: 'share ur fav bands and songs!! 🎵',
-                            type: 'public',
-                            created: Date.now()
-                        },
-                        {
-                            name: 'Emo Kids Unite',
-                            topic: 'for all the emo kids out there ♥',
-                            type: 'public',
-                            created: Date.now()
-                        }
-                    ];
-                    
-                    defaultRooms.forEach(room => {
-                        const newRoomRef = window.dbPush(roomsRef);
-                        window.dbSet(newRoomRef, room);
-                    });
-                }
-            }, { onlyOnce: true });
-        }
-
         async function loadRooms() {
-            const roomsRef = window.dbRef(window.db, 'rooms');
-            window.dbOnValue(roomsRef, (snapshot) => {
-                const rooms = [];
-                snapshot.forEach((childSnapshot) => {
-                    rooms.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
-                });
+            try {
+                const result = await window.storage.list('room:', true);
+                const roomKeys = result ? result.keys : [];
                 
-                const publicRooms = rooms.filter(r => r.type === 'public');
-                const privateRooms = rooms.filter(r => r.type === 'private');
+                const publicRooms = [];
+                const privateRooms = [];
+                
+                for (const key of roomKeys) {
+                    try {
+                        const roomData = await window.storage.get(key, true);
+                        if (roomData && roomData.value) {
+                            const room = JSON.parse(roomData.value);
+                            if (room.type === 'public') {
+                                publicRooms.push({id: key, ...room});
+                            } else {
+                                privateRooms.push({id: key, ...room});
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error loading room:', e);
+                    }
+                }
+                
+                if (publicRooms.length === 0) {
+                    await createDefaultRooms();
+                    await loadRooms();
+                    return;
+                }
                 
                 renderPublicRooms(publicRooms);
                 renderPrivateRooms(privateRooms);
-            });
+                
+            } catch (e) {
+                console.error('Error loading rooms:', e);
+                await createDefaultRooms();
+            }
+        }
+
+        async function createDefaultRooms() {
+            const defaultRooms = [
+                {
+                    id: 'room:general',
+                    name: 'General Vibes',
+                    topic: 'talk about anything!! RAWR!! 🦖',
+                    type: 'public',
+                    created: Date.now()
+                },
+                {
+                    id: 'room:music',
+                    name: 'Music Corner',
+                    topic: 'share ur fav bands and songs!! 🎵',
+                    type: 'public',
+                    created: Date.now()
+                },
+                {
+                    id: 'room:emo',
+                    name: 'Emo Kids Unite',
+                    topic: 'for all the emo kids out there ♥',
+                    type: 'public',
+                    created: Date.now()
+                }
+            ];
+            
+            for (const room of defaultRooms) {
+                try {
+                    await window.storage.set(room.id, JSON.stringify(room), true);
+                } catch (e) {
+                    console.error('Error creating default room:', e);
+                }
+            }
         }
 
         function renderPublicRooms(rooms) {
@@ -702,7 +696,7 @@
             rooms.forEach(room => {
                 const div = document.createElement('div');
                 div.className = 'room-item' + (currentRoom === room.id ? ' active' : '');
-                div.onclick = () => window.switchRoom(room.id, room.name, room.topic);
+                div.onclick = () => switchRoom(room.id);
                 div.innerHTML = `
                     <div class="room-name">#${escapeHtml(room.name)}</div>
                     <div class="room-topic">${escapeHtml(room.topic)}</div>
@@ -724,7 +718,7 @@
             rooms.forEach(room => {
                 const div = document.createElement('div');
                 div.className = 'room-item' + (currentRoom === room.id ? ' active' : '');
-                div.onclick = () => window.switchRoom(room.id, room.name, room.topic);
+                div.onclick = () => switchRoom(room.id);
                 div.innerHTML = `
                     <div class="room-name">🔒 ${escapeHtml(room.name)}</div>
                     <div class="room-topic">${escapeHtml(room.topic)}</div>
@@ -735,21 +729,33 @@
         }
 
         async function loadOnlineUsers() {
-            const usersRef = window.dbRef(window.db, 'users');
-            window.dbOnValue(usersRef, (snapshot) => {
+            try {
+                const result = await window.storage.list('user:', true);
+                const userKeys = result ? result.keys : [];
+                
                 const users = [];
                 const now = Date.now();
                 
-                snapshot.forEach((childSnapshot) => {
-                    const user = childSnapshot.val();
-                    if (now - user.lastSeen < 60000) {
-                        users.push(user);
+                for (const key of userKeys) {
+                    try {
+                        const userData = await window.storage.get(key, true);
+                        if (userData && userData.value) {
+                            const user = JSON.parse(userData.value);
+                            if (now - user.lastSeen < 30000) {
+                                users.push(user);
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Error loading user:', e);
                     }
-                });
+                }
                 
                 renderUsers(users);
                 document.getElementById('onlineCount').textContent = users.length;
-            });
+                
+            } catch (e) {
+                console.error('Error loading users:', e);
+            }
         }
 
         function renderUsers(users) {
@@ -777,64 +783,102 @@
             const username = document.getElementById('usernameInput').value.trim();
             if (!username) return;
             
-            const userKey = username.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            const userRef = window.dbRef(window.db, `users/${userKey}`);
-            await window.dbSet(userRef, {
-                username: username,
-                lastSeen: Date.now()
-            });
+            try {
+                const userKey = 'user:' + username.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                await window.storage.set(userKey, JSON.stringify({
+                    username: username,
+                    lastSeen: Date.now()
+                }), true);
+            } catch (e) {
+                console.error('Error updating presence:', e);
+            }
         }
 
-        window.switchRoom = function(roomId, roomName, roomTopic) {
+        async function switchRoom(roomId) {
             currentRoom = roomId;
-            document.getElementById('currentRoomName').textContent = '#' + roomName;
-            document.getElementById('currentRoomTopic').textContent = roomTopic;
             
-            if (messageListeners[roomId]) {
-                return;
+            if (updateInterval) {
+                clearInterval(updateInterval);
             }
             
-            loadMessages(roomId);
-            loadRooms();
-        }
-
-        function loadMessages(roomId) {
-            const messagesRef = window.dbRef(window.db, `messages/${roomId}`);
-            const messagesQuery = window.dbQuery(messagesRef, window.dbLimitToLast(100));
-            
-            window.dbOnChildAdded(messagesQuery, (snapshot) => {
-                const message = snapshot.val();
-                if (currentRoom === roomId) {
-                    appendMessage(message);
+            try {
+                const roomData = await window.storage.get(roomId, true);
+                if (roomData && roomData.value) {
+                    const room = JSON.parse(roomData.value);
+                    document.getElementById('currentRoomName').textContent = '#' + room.name;
+                    document.getElementById('currentRoomTopic').textContent = room.topic;
                 }
-            });
-            
-            messageListeners[roomId] = true;
+                
+                await loadMessages();
+                await loadRooms();
+                
+                updateInterval = setInterval(loadMessages, 3000);
+                
+            } catch (e) {
+                console.error('Error switching room:', e);
+            }
         }
 
-        function appendMessage(msg) {
+        async function loadMessages() {
+            if (!currentRoom) return;
+            
+            try {
+                const result = await window.storage.list(currentRoom + ':msg:', true);
+                const messageKeys = result ? result.keys : [];
+                
+                const messages = [];
+                for (const key of messageKeys) {
+                    try {
+                        const msgData = await window.storage.get(key, true);
+                        if (msgData && msgData.value) {
+                            messages.push(JSON.parse(msgData.value));
+                        }
+                    } catch (e) {
+                        console.error('Error loading message:', e);
+                    }
+                }
+                
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                
+                renderMessages(messages);
+                
+            } catch (e) {
+                console.error('Error loading messages:', e);
+            }
+        }
+
+        function renderMessages(messages) {
             const container = document.getElementById('chatMessages');
             if (!container) return;
             
-            const emptyState = container.querySelector('.empty-state');
-            if (emptyState) {
-                emptyState.remove();
+            const wasAtBottom = container.scrollHeight - container.scrollTop === container.clientHeight;
+            
+            container.innerHTML = '';
+            
+            if (messages.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div style="font-size: 56px; margin-bottom: 15px;">💬</div><div>No messages yet!</div><div>Be the first to say something ✨</div></div>';
+                return;
             }
             
-            const div = document.createElement('div');
-            div.className = 'message';
-            div.innerHTML = `
-                <div>
-                    <span class="message-username">${escapeHtml(msg.username)}</span>
-                    <span class="message-time">${msg.time}</span>
-                </div>
-                <div class="message-text">${escapeHtml(msg.text)}</div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = 'message';
+                div.innerHTML = `
+                    <div>
+                        <span class="message-username">${escapeHtml(msg.username)}</span>
+                        <span class="message-time">${msg.time}</span>
+                    </div>
+                    <div class="message-text">${escapeHtml(msg.text)}</div>
+                `;
+                container.appendChild(div);
+            });
+            
+            if (wasAtBottom || messages.length === 1) {
+                container.scrollTop = container.scrollHeight;
+            }
         }
 
-        window.sendMessage = async function() {
+        async function sendMessage() {
             if (!currentRoom) {
                 alert('⚠️ Pick a room first!! ✨');
                 return;
@@ -861,18 +905,19 @@
             try {
                 localStorage.setItem('scenevibe_username', username);
                 
-                const messagesRef = window.dbRef(window.db, `messages/${currentRoom}`);
-                const newMessageRef = window.dbPush(messagesRef);
-                
-                await window.dbSet(newMessageRef, {
+                const messageKey = currentRoom + ':msg:' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const message = {
                     username: username,
                     text: text,
                     time: getTime(),
                     timestamp: Date.now()
-                });
+                };
+                
+                await window.storage.set(messageKey, JSON.stringify(message), true);
+                await updateUserPresence();
                 
                 messageInput.value = '';
-                await updateUserPresence();
+                await loadMessages();
                 
             } catch (e) {
                 console.error('Error sending message:', e);
@@ -880,7 +925,7 @@
             }
         }
 
-        window.createRoom = async function() {
+        async function createRoom() {
             const nameInput = document.getElementById('roomName');
             const topicInput = document.getElementById('roomTopic');
             const codeInput = document.getElementById('roomCode');
@@ -907,9 +952,7 @@
             }
             
             try {
-                const roomsRef = window.dbRef(window.db, 'rooms');
-                const newRoomRef = window.dbPush(roomsRef);
-                
+                const roomId = 'room:' + name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
                 const room = {
                     name: name,
                     topic: topic || 'No description yet!',
@@ -918,14 +961,15 @@
                     created: Date.now()
                 };
                 
-                await window.dbSet(newRoomRef, room);
+                await window.storage.set(roomId, JSON.stringify(room), true);
                 
                 nameInput.value = '';
                 topicInput.value = '';
                 if (codeInput) codeInput.value = '';
                 
-                window.closeModal('createRoomModal');
-                window.switchRoom(newRoomRef.key, room.name, room.topic);
+                closeModal('createRoomModal');
+                await loadRooms();
+                await switchRoom(roomId);
                 
             } catch (e) {
                 console.error('Error creating room:', e);
@@ -933,18 +977,18 @@
             }
         }
 
-        window.openCreateRoomModal = function(type) {
+        function openCreateRoomModal(type) {
             roomType = type;
             document.getElementById('createModalTitle').textContent = type === 'private' ? '🔒 CREATE PRIVATE ROOM' : '✨ CREATE PUBLIC ROOM';
             document.getElementById('privateSection').style.display = type === 'private' ? 'block' : 'none';
             document.getElementById('createRoomModal').classList.add('active');
         }
 
-        window.openJoinModal = function() {
+        function openJoinModal() {
             document.getElementById('joinModal').classList.add('active');
         }
 
-        window.joinPrivateRoom = async function() {
+        async function joinPrivateRoom() {
             const codeInput = document.getElementById('joinCode');
             if (!codeInput) return;
             
@@ -956,28 +1000,34 @@
             }
             
             try {
-                const roomsRef = window.dbRef(window.db, 'rooms');
-                window.dbOnValue(roomsRef, (snapshot) => {
-                    let foundRoom = null;
-                    snapshot.forEach((childSnapshot) => {
-                        const room = childSnapshot.val();
-                        if (room.type === 'private' && room.code === code) {
-                            foundRoom = {
-                                id: childSnapshot.key,
-                                ...room
-                            };
+                const result = await window.storage.list('room:', true);
+                const roomKeys = result ? result.keys : [];
+                
+                let foundRoom = null;
+                for (const key of roomKeys) {
+                    try {
+                        const roomData = await window.storage.get(key, true);
+                        if (roomData && roomData.value) {
+                            const room = JSON.parse(roomData.value);
+                            if (room.type === 'private' && room.code === code) {
+                                foundRoom = key;
+                                break;
+                            }
                         }
-                    });
-                    
-                    if (!foundRoom) {
-                        alert('⚠️ Invalid code!! Try again 💔');
-                        return;
+                    } catch (e) {
+                        console.error('Error checking room:', e);
                     }
-                    
-                    codeInput.value = '';
-                    window.closeModal('joinModal');
-                    window.switchRoom(foundRoom.id, foundRoom.name, foundRoom.topic);
-                }, { onlyOnce: true });
+                }
+                
+                if (!foundRoom) {
+                    alert('⚠️ Invalid code!! Try again 💔');
+                    return;
+                }
+                
+                codeInput.value = '';
+                closeModal('joinModal');
+                await loadRooms();
+                await switchRoom(foundRoom);
                 
             } catch (e) {
                 console.error('Error joining room:', e);
@@ -985,7 +1035,7 @@
             }
         }
 
-        window.closeModal = function(modalId) {
+        function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (modal) {
                 modal.classList.remove('active');
@@ -1012,6 +1062,8 @@
                 event.target.classList.remove('active');
             }
         }
+
+        setInterval(updateUserPresence, 15000);
 
         init();
     </script>
